@@ -7,7 +7,7 @@ import rocketIcon from "../assets/rocket.svg";
 
 const Sidebar = ({ handleQuery, onNewChat, setView, currentView, onClose }) => {
   return (
-    <div className="w-64 h-screen flex flex-col border-r border-white/10 bg-[#030220] px-5 py-5 overflow-y-auto">
+    <div className="w-screen md:w-64 h-screen flex flex-col border-r border-white/10 bg-[#030220] px-5 py-5 overflow-y-auto">
       {" "}
       <div className="flex-1 flex flex-col gap-4">
         <div className="flex items-center justify-between px-1 py-1">
