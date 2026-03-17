@@ -5,16 +5,23 @@ import homeIcon from "../assets/home.svg";
 import savedIcon from "../assets/bookmark.svg";
 import rocketIcon from "../assets/rocket.svg";
 
-const Sidebar = ({ handleQuery, onNewChat, setView, currentView }) => {
+const Sidebar = ({ handleQuery, onNewChat, setView, currentView, onClose }) => {
   return (
     <div className="w-64 h-screen flex flex-col border-r border-white/10 bg-[#030220] px-5 py-5 overflow-hidden">
-      {/* 1. L-Header: New Chat Button */}
       <div className="flex-1 flex flex-col gap-4">
-        <div className="flex items-center gap-2 px-1 py-1">
-          <img src={chatgptLogo} alt="Logo" className="w-6 h-6" />
-          <span className="font-semibold text-sm tracking-widest text-white">
-            CHATGPT
-          </span>
+        <div className="flex items-center justify-between px-1 py-1">
+          <div className="flex items-center gap-2">
+            <img src={chatgptLogo} alt="Logo" className="w-6 h-6" />
+            <span className="font-semibold text-sm tracking-widest text-white">
+              CHATGPT
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="md:hidden text-white/50 hover:text-white text-lg"
+          >
+            ✕
+          </button>
         </div>
 
         <button
@@ -25,7 +32,6 @@ const Sidebar = ({ handleQuery, onNewChat, setView, currentView }) => {
           New Chat
         </button>
 
-        {/* 2. Recent Queries: Quick Buttons */}
         <div className="flex flex-col gap-1 mt-4">
           <p className="text-[10px] text-white/30 px-2 mb-1 uppercase font-bold tracking-widest">
             Recent
@@ -72,7 +78,6 @@ const Sidebar = ({ handleQuery, onNewChat, setView, currentView }) => {
           Home
         </div>
 
-        {/* Saved Button */}
         <div
           onClick={() => setView("saved")}
           className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-sm ${
@@ -89,7 +94,6 @@ const Sidebar = ({ handleQuery, onNewChat, setView, currentView }) => {
           Saved Messages
         </div>
 
-        {/* Upgrade Button */}
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition text-sm text-white/40 cursor-not-allowed group">
           <img
             src={rocketIcon}
