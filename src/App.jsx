@@ -77,7 +77,7 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex bg-[#030220] text-white font-sans overflow-hidden">
+    <div className="h-dvh flex bg-[#030220] text-white font-sans overflow-hidden">
       {/* Overlay f mobile */}
       {sidebarOpen && (
         <div
@@ -102,8 +102,8 @@ function App() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Hamburger — mobile only */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+        {" "}
         <button
           className="md:hidden absolute top-4 left-4 z-10 text-white/70 hover:text-white"
           onClick={() => setSidebarOpen(true)}
@@ -114,7 +114,6 @@ function App() {
             <span className="block w-3 h-[2px] bg-current rounded-full"></span>
           </div>
         </button>
-
         <MessageList
           messages={messages}
           msgEnd={msgEnd}
