@@ -105,10 +105,14 @@ function App() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Hamburger — mobile only */}
         <button
-          className="md:hidden absolute top-4 left-4 z-10 text-white/70 hover:text-white text-xl"
+          className="md:hidden absolute top-4 left-4 z-10 text-white/70 hover:text-white"
           onClick={() => setSidebarOpen(true)}
         >
-          ☰
+          <div className="flex flex-col gap-[5px] p-2 rounded-lg hover:bg-white/10 transition">
+            <span className="block w-5 h-[2px] bg-current rounded-full"></span>
+            <span className="block w-5 h-[2px] bg-current rounded-full"></span>
+            <span className="block w-3 h-[2px] bg-current rounded-full"></span>
+          </div>
         </button>
 
         <MessageList

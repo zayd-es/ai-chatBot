@@ -10,7 +10,7 @@ const MessageList = ({ messages, msgEnd, isLoading, onSave, view }) => {
     view === "saved" ? messages.filter((m) => m.isSaved) : messages;
 
   return (
-    <div className="flex-1 overflow-y-auto pt-12 md:pt-6 px-6 py-6 flex flex-col gap-6 max-w-3xl mx-auto w-full">
+    <div className="flex-1 overflow-y-auto pt-12  md:pt-6 px-16 h-screen flex flex-col gap-6 max-w-3xl mx-auto w-full">
       {messagesToDisplay.map((msg, index) => {
         const realIndex = messages.findIndex((m) => m === msg);
 
