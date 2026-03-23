@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useRef, useState } from "react";
 import { processMessage } from "./openAi";
 import MessageList from "./components/MessagesList";
@@ -9,8 +10,14 @@ function App() {
   const [input, setInput] = useState("");
   const [view, setView] = useState("chat");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [currentId, setCurrentId] = useState(() => {
+    return localStorage.getItem("current_chat_id") || Date.now().toString();
+  });
+
   const [messages, setMessages] = useState(() => {
-    const savedMessages = localStorage.getItem("chat_history");
+    const savedMessages = localStorage.getItem(`chat_${currentId}`);
     return savedMessages
       ? JSON.parse(savedMessages)
       : [
@@ -20,65 +27,100 @@ function App() {
           },
         ];
   });
-  const [isLoading, setIsLoading] = useState(false);
 
-  const prevLengthRef = useRef(messages.length);
-
-  useEffect(() => {
-    if (messages.length > prevLengthRef.current) {
-      msgEnd.current?.scrollIntoView({ behavior: "smooth" });
-    }
-    prevLengthRef.current = messages.length;
-  }, [messages.length]);
+  const [conversations, setConversations] = useState(() => {
+    const saved = localStorage.getItem("conversations");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
-    if (messages.length > 1) {
-      localStorage.setItem("chat_history", JSON.stringify(messages));
-    }
+    msgEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    const text = input;
-    setInput("");
-    setMessages((prev) => [...prev, { text, isBot: false }]);
+  useEffect(() => {
+    const firstUserMsg = messages.find((m) => !m.isBot);
+    if (firstUserMsg) {
+      const title = firstUserMsg.text.slice(0, 30);
+      setConversations((prev) => {
+        const exists = prev.find((c) => c.id === currentId);
+        if (exists && exists.title === title) return prev;
+
+        const updated = [
+          { id: currentId, title },
+          ...prev.filter((c) => c.id !== currentId),
+        ];
+        localStorage.setItem("conversations", JSON.stringify(updated));
+        return updated;
+      });
+    }
+    localStorage.setItem(`chat_${currentId}`, JSON.stringify(messages));
+    localStorage.setItem("current_chat_id", currentId);
+  }, [messages, currentId]);
+
+  const sendMessage = async (text) => {
+    if (!text.trim()) return;
+    const newUserMsg = { text, isBot: false };
+    setMessages((prev) => [...prev, newUserMsg]);
     setIsLoading(true);
-    const res = await processMessage(text);
-    setMessages((prev) => [...prev, { text: res, isBot: true }]);
-    setIsLoading(false);
+
+    try {
+      const res = await processMessage(text);
+      setMessages((prev) => [...prev, { text: res, isBot: true }]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { text: "Sorry, something went wrong. 😕", isBot: true },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleQuery = async (e) => {
-    const text = e.currentTarget.value;
-    if (!text) return;
-    setMessages((prev) => [...prev, { text, isBot: false }]);
-    setIsLoading(true);
-    const res = await processMessage(text);
-    setMessages((prev) => [...prev, { text: res, isBot: true }]);
-    setIsLoading(false);
+  const handleSend = () => {
+    sendMessage(input);
+    setInput("");
+  };
+
+  const handleQuery = (e) => {
+    sendMessage(e.currentTarget.value);
+  };
+
+  const handleDeleteConversation = (id) => {
+    setConversations((prev) => {
+      const updated = prev.filter((c) => c.id !== id);
+      localStorage.setItem("conversations", JSON.stringify(updated));
+      return updated;
+    });
+    localStorage.removeItem(`chat_${id}`);
+    if (id === currentId) handleNewChat();
   };
 
   const handleNewChat = () => {
-    localStorage.removeItem("chat_history");
+    const newId = Date.now().toString();
+    setCurrentId(newId);
     setMessages([
       { text: "Hello! I'm your AI assistant. How can I help? 🚀", isBot: true },
     ]);
   };
 
   const toggleSaveMessage = (index) => {
-    setMessages((prevMessages) => {
-      const updatedMessages = [...prevMessages];
-      updatedMessages[index] = {
-        ...updatedMessages[index],
-        isSaved: !updatedMessages[index].isSaved,
-      };
-      return updatedMessages;
-    });
+    setMessages((prev) =>
+      prev.map((msg, i) =>
+        i === index ? { ...msg, isSaved: !msg.isSaved } : msg,
+      ),
+    );
+  };
+  const handleSelectConversation = (id) => {
+    const saved = localStorage.getItem(`chat_${id}`);
+    if (saved) {
+      setCurrentId(id);
+      setMessages(JSON.parse(saved));
+      setSidebarOpen(false);
+    }
   };
 
   return (
     <div className="h-dvh flex bg-[#030220] text-white font-sans overflow-hidden">
-      {/* Overlay f mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-20 md:hidden"
@@ -86,11 +128,8 @@ function App() {
         />
       )}
 
-      {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 md:static z-30 h-full w-full md:w-64 transition-transform duration-300 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        className={`fixed inset-y-0 left-0 md:static z-30 h-full w-full md:w-64 transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         <Sidebar
           handleQuery={handleQuery}
@@ -98,22 +137,24 @@ function App() {
           setView={setView}
           currentView={view}
           onClose={() => setSidebarOpen(false)}
+          conversations={conversations}
+          onDeleteConversation={handleDeleteConversation}
+          onSelectConversation={handleSelectConversation}
         />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-        {" "}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative">
         <button
           className="md:hidden absolute top-4 left-4 z-10 text-white/70 hover:text-white"
           onClick={() => setSidebarOpen(true)}
         >
-          <div className="flex flex-col gap-[5px] p-2 rounded-lg hover:bg-white/10 transition">
-            <span className="block w-5 h-[2px] bg-current rounded-full"></span>
-            <span className="block w-5 h-[2px] bg-current rounded-full"></span>
-            <span className="block w-3 h-[2px] bg-current rounded-full"></span>
+          <div className="flex flex-col gap-1.25 p-2 rounded-lg hover:bg-white/10 transition">
+            <span className="block w-5 h-0.5 bg-current rounded-full"></span>
+            <span className="block w-5 h-0.5 bg-current rounded-full"></span>
+            <span className="block w-3 h-0.5 bg-current rounded-full"></span>
           </div>
         </button>
+
         <MessageList
           messages={messages}
           msgEnd={msgEnd}
